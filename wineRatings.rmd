@@ -1,0 +1,318 @@
+
+# What Determines Red Wine Quality Ratings?
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load packages
+library(dplyr)
+library(ggplot2)
+library(GGally)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+rw <- read.csv('wineQualityReds.csv')
+```
+
+Thanks to Cortez et al, the dataset we will be examining consists of 1599 observations of Portugese red wine. For each observation is information about its physicochemical properties and a quality rating (0 to 10) calculated from the median of at least three expert evaluations.
+
+# Univariate Plots Section
+
+Let's examine the columns, their data types, and values
+
+```{r echo=FALSE, Univariate_Plots}
+str(rw)
+```
+
+There are 11 variables pertaining to physicochemical properties, all of them are continuous. It would be excessive to create a histogram and calculate descriptive statistics for all of them. Fortunately, the builders of the dataset have already identified specific variables that are likely to have an effect on the perceived quality of the wine, so we will be examining them. Later our analysis will reveal if other secondary properties also impact on perceived quality, and whether the primary properties are material to ratings as the authors claim.
+
+We begin with **volatile.acidity** which is measured in grams per decimetre cubed, Cortez et al claim that too high levels of this acetic acid 'can lead to an unpleasant vinegar taste'
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = volatile.acidity, data = rw)
+```
+
+```{r echo = FALSE, message=FALSE}
+summary(rw$volatile.acidity)
+```
+
+So the distribution clusters around the mean, with the graph skewing slightly right. Let's examine **citric acid**, which Cortez et al claim adds freshness and flavor to wines when in small quantities.
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = citric.acid, data = rw)
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$citric.acid)
+```
+
+The distribution here is almost bimodal. Let's look at **residual sugar**, also measured in grams per cubic decimetre: Cortez et al claim wines rarely have less than 1g/litre or more than 45g/litre which is considered too sweet
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = residual.sugar, data = rw)
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$residual.sugar)
+```
+
+This is indeed the case as the authors claim, our lowest observation value is only 0.9 grams and the highest is 15.5 grams. Now, let's examine **chlorides**, which is the amount of salt in the wine. Obviously wine wouldn't taste too good if it was salty.
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = chlorides, data = rw)
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$chlorides)
+```
+
+Again, the distribution is similar to residual sugars. Let's consider **free sulfur dioxide**, which Cortez et al claim prevents microbial growth and oxidation of wine and is measured in parts per million (ppm). Once it crosses 50ppm, the taste and smell of wine changes
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = free.sulfur.dioxide, data = rw)
+```
+
+```{r echo=TRUE, message=FALSE}
+summary(rw$free.sulfur.dioxide)
+```
+
+There are very few observations crossing 50ppm. Now let's examine the **pH** or how acidic or basic the wine is: a pH of 0 is highly acidic whilst that of 14 is very basic.
+
+```{r echo=TRUE, message=FALSE}
+qplot(x = pH, data = rw)
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$pH)
+```
+
+So most wines cluster around a mean pH of 3, with the maximum observation having a pH of 4- so our wines are all quite acidic. Finally, we consider the **alcohol** content of our wines, with values represented as percentages.
+
+```{r echo=FALSE, message=FALSE}
+qplot(x = alcohol, data = rw)
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$alcohol)
+```
+
+So our wines have higher alcohol content than most beers, with a mean of 10.42% and the minimum being 8.4%, there is even a wine with an alcohol content of 14.9%! I would certainly like to taste it, later we shall see if higher alcohol content increases quality ratings.
+
+Finally, lets look at the distribution of **quality** ratings for our Portugese wines. Note this is a modified quality rating which is calculated from taking the median of at least three reviews given by wine experts.
+
+```{r echo=FALSE, message=FALSE}
+ggplot(rw, aes(x=factor(quality))) + geom_bar()
+```
+
+```{r echo=FALSE, message=FALSE}
+summary(rw$quality)
+```
+
+So the vast majority of our wines are rated between 5 or 6, which is fair. The lowest rating is a 3, but there are no perfect ratings either, with the highest being an 8. This could be due to the prudent judgements given by experts, and also because the final rating is calculated from the median.
+
+
+Let's create a categorical variable called 'class' based on ratings given by experts. Our univariate plot shows ratings for all wines falling between 3 - 8, so a class of 'poor' can be assigned for ratings from 3 - 4, 'fair' for 5 - 6, and 'good' for 7 - 8. We can then use this to see if the strength of the relationship between physicochemcial properties differs according to wine class.
+
+```{r echo=FALSE, message=FALSE}
+rw$class <- 
+  ifelse(rw$quality > 6, 'Good', ifelse(rw$quality > 4, 'Fair', 'Poor'))
+```
+
+Now that we have created this new categorical variable, let's plot out the distribution
+
+```{r echo=FALSE, message=FALSE}
+ggplot(rw, aes(class)) + geom_bar()
+```
+
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+Our dataset consists of 1599 observations with 11 variables, all represented by values that are continuous and numerical. There are no categorical variables, and all are in consistent units without any missing values. All variables relate to either the physicochemical properties of the wine, or the quality rating given by an expert. 
+
+### What is/are the main feature(s) of interest in your dataset?
+Our wines are acidic, with low pH. They have low residual sugar, below the 45g threshold that would be considered too sweet. They have low free sulfur dioxide, less than than 50ppm threshold that would be noticeable in taste and smell. On average, the alcohol content is around 10%. Most wines have a quality rating of 'fair', that is between 5 to 6. 
+
+### What other features in the dataset do you think will help support your \ investigation into your feature(s) of interest?
+The dataset invites us to find how physicochemical properties impact on quality ratings given by experts. But we could also look at how physicochemical properties are related to each other, and whether the strength of the relationship changes depending on the quality rating of the wine.
+
+### Did you create any new variables from existing variables in the dataset?
+A new categorical variable was created based on the quality rating the wine received, this will allow us to see if the strength of relationships between physicohemcial properties varies by wine quality.
+
+### Of the features you investigated, were there any unusual distributions? \ 
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+The variables are already given in consistent units, without missing values. So no data wrangling was necessary. Some distributions for variables like residual sugar and chlorides had outliers and a long tail, but this did not prevent us from clearly observing the distribution of values so no transformations were necessary.
+
+# Bivariate Plots Section
+
+Cortez et al have already described the physicochemical properties they expect to influence quality ratings, and we have examined their distributions using univariate plots. Here we will use a scatter plot matrix to gain a high level overview of the relationship between these primary physicochemical properties and quality ratings, in addition to how they relate to each other.
+
+```{r echo=FALSE, Bivariate_Plots}
+primary = c("free.sulfur.dioxide", "volatile.acidity", "citric.acid", 
+            "residual.sugar", "alcohol", "quality")
+ggpairs(rw[primary])
+```
+
+Let us get to the key question of how primary physicochemcial properties affect quality ratings. It can be seen that **alcohol** percentage is strongly correlated with quality at 0.476.
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(alcohol, quality), data = rw) + 
+  geom_jitter(alpha = 0.3) 
+```
+
+Here is a visual illustration that wines with higher alcohol percentages attract higher quality ratings. This is one aspect that Cortez et al have not remarked upon. **Residual Sugar** on the other hand is shown to be very weakly correlated with quality ratings, at only 0.0137- this is likely because there is very little variation in residual sugar values and they never exceed the threshold (45g) at which the authors state would degrade the wine tasting experience.
+
+
+**Citric acid** is also found to be positively correlated with quality ratings, at 0.226.
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(citric.acid, quality), data = rw) + 
+  geom_jitter(alpha = 0.3)
+```
+
+Higher level of citric acid are associated with higher quality ratings and this is consistent with the Cortez et al's comment that the presence of citric acid adds freshness to the wine.
+
+
+On the other hand, **volatile acidity** is negatively correlated with quality ratings, at -0.391. 
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(volatile.acidity, quality), data = rw) +
+  geom_jitter(alpha = 0.3)
+```
+
+This is consistent with Cortez et al's observation that higher levels of such acetic acid can lead to an unpleasant and sour taste. Our matrix also presents a strong negative correlation between citric acid and volatile acidity at -0.552
+
+```{r echo=FALSE, message= FALSE}
+ggplot(aes(citric.acid, volatile.acidity), data = rw) + 
+  geom_point(alpha = 0.3)
+```
+
+The more citric acid, the less volatile acidity. Further on we will attempt to see if this relationship is particularly strong for higher rated wines, is there some kind of special production process that gives certain wines an advantage?
+
+Now that we have examined the primary physicochemical properties, we must consider secondary physicochemical properties that Cortez et al were less attentive towards. Do they have any relationship with quality ratings? Do they have any relationship with each other?
+
+```{r echo=FALSE, message=FALSE}
+secondary = c("fixed.acidity", "chlorides", "total.sulfur.dioxide", "density", 
+              "pH", "sulphates", "quality")
+ggpairs(rw[secondary])
+```
+
+The matrix show a positive relationship between **sulphates** and quality ratings, with a correlation of 0.251.
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(sulphates, quality), data = rw) +
+  geom_jitter(alpha = 0.2)
+```
+
+It is not clear why adding sulphates improves quality ratings, Cortez et al mention that doing so leads to an increase in free sulfur dioxide which prevents microbial growth and oxidation of wine, but previous calculations show that the relationship between free sulfur dioxide and rated quality is weakly negative.
+
+
+The matrix also shows a strong correlation between **density** and **fixed.acidity** at 0.668.
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(density, fixed.acidity), data = rw) +
+  geom_point(alpha = 0.3)
+```
+
+This show wine density increasing with higher levels of non-evaporative acidity. We will see if the strength of this relationship changes with the quality rating of the wine.
+
+Note that a highly negative relationship exists between **pH** and **fixed acidity** with a correlation of -0.683, but it is self explanatory why this is so: a lower pH is by definition more acidic.
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \ investigation. How did the feature(s) of interest vary with other features in \ the dataset?
+The dataset authors already commented on the primary physicochemical properties they believed influenced quality ratings. Our bivariate plots and calculations largely confirmed their analysis: for example volatile acidity (or acetic acid) has a -0.391 correlation with quality ratings, citric acid is positively correlated with quality ratings at 0.226. However one relationship Cortez et al didn't discuss was that between alcohol and quality rating, where there was a strong positive correlation of 0.476.
+
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+Citric acid has a strong negative correlation with volatile acidity: -0.552. Any wine that can leverage this relationship can substantially improve its ratings from experts. We will be doing further investigation to see if higher quality wines embody this relationship.
+
+
+### What was the strongest relationship you found?
+Density is highly correlated with fixed acidity (0.668), further investigation will be conducted to see if the strength of the is relationship varies with wine quality.
+
+# Multivariate Plots Section
+
+Based on our bivariate plots, we know that there is a strong negative correlation between citric acid and volatile acidity. Does the magnitude of this negative relationship differ according to the quality rating of the wine?
+
+```{r echo=FALSE, Multivariate_Plots}
+ggplot(aes(x = citric.acid, y = volatile.acidity), data = rw) + 
+  geom_point(aes(color = class), alpha = 0.5)
+```
+
+Our plot demonstrates that highly rated wines (represented in green) tend to have high citric acid and low volatile acidity, whereas poorly rated wines (represented in blue) tend to have low citric acid and high acetic acid, whereas fairly rated wines are in between.
+
+
+We also found a strong correlation between density and fixed acidity: 0.668. Does the strength of the relationship vary depending on the class of wine?
+
+```{r echo=FALSE, message=FALSE}
+ggplot(aes(x = density, y = fixed.acidity), data = rw) + 
+  geom_point(aes(color = class), alpha = 0.5) 
+```
+
+Our plot demonstrates that the strength of the relationship between density and fixed acidity is not contingent upon the class of wine.
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \ investigation. Were there features that strengthened each other in terms of \ looking at your feature(s) of interest?
+Our previous bivariate plots showed that citric acid was positively correlated with quality ratings, and volatile acidity was negatively correlated with quality ratings. The plots also showed that volatile acidity and citric acid have a strongly negative relationship with each other. The multivariate plot shows that this negative correlation is particularly pronounced with higher quality wines.
+
+### Were there any interesting or surprising interactions between features?
+The fact that 'good' class wines, or higher quality wines embody a particularly strong negative relationship between citric acid and acetic acid, seems to suggest that this is one of the key mechanisms by which they attract high ratings: by lowering the amount of acetic acid (which Cortez et al claim lead to a sour taste) and raising the amount of citric acid (which is claimed to lead to fresh taste). There may, in fact, be some kind of special production technique at play.
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the \ strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+> **Tip**: You've done a lot of exploration and have built up an understanding
+of the structure of and relationships between the variables in your dataset.
+Here, you will select three plots from all of your previous exploration to
+present here as a summary of some of your most interesting findings. Make sure
+that you have refined your selected plots for good titling, axis labels (with
+units), and good aesthetic choices (e.g. color, transparency). After each plot,
+make sure you justify why you chose each plot by describing what it shows.
+
+### Plot One
+```{r echo=FALSE, message=FALSE, Plot_One}
+qplot(x = factor(quality), data = rw, main="Distribution of Quality Ratings for Wine", 
+      ylab="Count", xlab="Quality Rating (0 to 10)")
+```
+
+### Description One
+The plot illustrates that ratings for our 1599 wine observations are surprisingly stable, the vast majority given are 5 or 6. The lowest rating is a 3 and the highest is an 8. This may be due to calculation of ratings based on the median of three, rather than as a mean. It may also say something about the nature of reviewers or the nature of the wine. We need more information about how the data was collected to make further inferences.
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(factor(quality), alcohol), data =  rw) + geom_jitter(alpha = 0.4) + 
+  geom_boxplot(aes(group = quality), alpha = 0.5, color = 'blue') +
+  ggtitle("Alcohol Content per Wine Quality") +
+  ylab("Alcohol (%)") +
+  xlab("Quality Rating (0 to 10)")
+```
+
+### Description Two
+A key finding from our study, and one not mentioned by the authors, is the positive relationship between alcohol and quality ratings (0.476). The higher the quality rating, the higher the alcohol content tends to be.
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x = citric.acid, y = volatile.acidity), data = rw) + 
+  geom_point(aes(color = class), alpha = 0.6) + xlab("Citric Acid (g/cubic decimetre)") +
+  ylab("Volatile Acidity (g/cubic decimetre)") + 
+  ggtitle("Relationship between Citric Acid and Volatile Acidity") +
+  scale_color_brewer(type='seq') +
+  theme(panel.background = element_rect(fill = 'pink'))
+```
+
+### Description Three
+In general citric acid is negatively correlated with volatile acidity (or acetic acid): -0.552. Higher levels of citric acid are positively associated with quality ratings, the opposite is true for volatile acidity. The nature of the relationship is particular strong for high quality wines, which tend to have the highest amounts of citric acid, and the lowest amount of acetic acid. Have those producers found some special process for making wines that win the praise of critics?
+
+------
+
+# Reflection
+
+Exploration of the dataset has had benefits and challenges. The easy part has been the lack of missing values and cleanliness and consistency in the format of the data. The challenge has been lack of categorical variables that could provide further insight. For example, knowing the region or the type of soil in which the wines were grown could have yielded additional insights in terms of understanding relationships involving quality ratings or physicochemical properties. Nevertheless we have been able to gain some insights about what drives wines to gain higher quality ratings: namely alcohol content, and the inverse relationship between citric and acetic acid. In the future, taking the mean rather than the median of expert ratings may provide a more accurate picture of how the wines were received. Adding additional categorical information such as fermentation method, soil type, producer, would help us yeild additional insights into what makes great wine, and what produces certain physicochemical properties.
+
