@@ -1,3 +1,8 @@
+---
+title: "Red Wine Quality Ratings"
+output: md_document
+author: Peter Zhang
+---
 
 Factors Determining Quality of Red Wine
 ========================================================
